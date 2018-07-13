@@ -71,6 +71,7 @@ class ArtistSearch extends Component {
           onSearchChange={_.debounce(this.handleSearchChange, 500, { leading: true })}
           results={results}
           value={value}
+          placeholder="Künstler suchen"
           resultRenderer={resultRenderer}
           {...this.props}
         />
