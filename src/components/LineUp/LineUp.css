@@ -1,0 +1,22 @@
+.App {
+  padding: 30px;
+  /* background-color: #0c4541; */
+}
+
+.stageButtons button {
+    text-align: left !important;
+}
+
+.panama-button {
+  background-color: #ffe000 !important;
+  color: #535353 !important;
+}
+
+.panama-button.active {
+  background-color: #e2c702 !important;
+  color: black !important;
+}
+
+.bg-pan-yellow {
+  background-color: #ffe000 !important;
+}
