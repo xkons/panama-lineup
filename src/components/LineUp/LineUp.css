@@ -20,3 +20,11 @@
 .bg-pan-yellow {
   background-color: #ffe000 !important;
 }
+
+.heading {
+  display: inline-block;
+}
+
+.search-btn {
+  float: right;
+}

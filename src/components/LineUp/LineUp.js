@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import './LineUp.css';
 import Favorites from '../Favorites/Favorites';
-import localForage from "localforage"
+import localForage from "localforage";
+import ArtistSearch from '../ArtistSearch/ArtistSearch';
 import {
   Button,
   Header,
@@ -96,7 +97,8 @@ class LineUp extends Component {
         day: "Freitag",
         stage: "Panama Stage",
         showFavorites: false,
-        starredArtists: []
+        starredArtists: [],
+        showSearch: false
     };
   }
 
@@ -132,13 +134,16 @@ class LineUp extends Component {
     }
   );
 
+  _toggleSearch = () => this.setState(prevState => ({showSearch: !prevState.showSearch}));
+
   _favoritesAreEqual = (offline, online) => offline.length === online.length && online.every((element) => offline.includes(element))
 
   render() {
     return (
       <div className="App">
         <header>
-          <Header as='h1'>Panama Line-Up 2018</Header>
+          <Header className="heading" as='h1'>Panama Line-Up</Header><Button onClick={this._toggleSearch} className="panama-button search-btn" icon='search' />
+          {this.state.showSearch ? <ArtistSearch source={lineUpItems} /> : ""}
           <Divider />
         </header>
         <main>
