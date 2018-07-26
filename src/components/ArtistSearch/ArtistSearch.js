@@ -2,16 +2,20 @@ import _ from 'lodash';
 import PropTypes from 'prop-types';
 import React, { Component, Fragment } from 'react';
 import { List, Search } from 'semantic-ui-react';
+import LineUpItem from '../LineUpItem/LineUpItem';
 
-const resultRenderer = ({ day, time, artist, stage, title }) => <p key={artist}>{day} {time} <b>{artist}</b><br/>{stage}</p>
+// the title parameter is required by the Semantic UI Search component
+const resultPreviewsRenderer = ({ day, time, artist, stage, title }) => (
+  <p key={artist}>{day} {time} <b>{artist}</b><br/>{stage}</p>
+);
 
-resultRenderer.propTypes = {
+resultPreviewsRenderer.propTypes = {
   day: PropTypes.string,
   artist: PropTypes.string,
   stage: PropTypes.string,
   url: PropTypes.string,
   time: PropTypes.string,
-}
+};
 
 class ArtistSearch extends Component {
   /**
@@ -19,71 +23,89 @@ class ArtistSearch extends Component {
    */
   constructor(props) {
     super(props);
-    this.searchIndex = this.intiliazeSearchIndex(props.source);
+    this.searchIndex = this._intiliazeSearchIndex(props.source);
   }
 
   searchIndex = [];
 
   componentWillMount() {
-    this.resetComponent()
+    this._resetComponent()
   }
 
-  intiliazeSearchIndex = (documents) => {
+  _resetComponent = () => this.setState({ isLoading: false, results: [], value: '' });
+
+  /**
+   * Adds a title attribute to each item in the index since it is required
+   * for the Semantic UI search component to work properly.
+   * 
+   * @param {array} documents
+   */
+  _intiliazeSearchIndex = (documents) => {
     documents.forEach((lineUpItem, position) => {
       lineUpItem["title"] = lineUpItem.artist;
       documents[position] = lineUpItem;
     });
     return documents;
-  }
+  };
 
-  resetComponent = () => this.setState({ isLoading: false, results: [], value: '' })
+  /**
+   * Is called when the user selects an Item from the previewed results.
+   */
+  _handleResultSelect = (e, { result }) => this.setState({ value: result.artist });
 
-  handleResultSelect = (e, { result }) => this.setState({ value: result.artist })
-
-  handleSearchChange = (e, { value }) => {
-    this.setState({ isLoading: true, value })
+  /**
+   * Is called when the search input changes.
+   */
+  _handleSearchChange = (e, { value }) => {
+    this.setState({ isLoading: true, value });
 
     setTimeout(() => {
-      if (this.state.value.length < 1) return this.resetComponent()
+      if (this.state.value.length < 1) return this._resetComponent();
 
-      const re = new RegExp(_.escapeRegExp(this.state.value), 'i')
-      const isMatch = result => re.test(result.artist)
+      const re = new RegExp(_.escapeRegExp(this.state.value), 'i');
+      const isMatch = result => re.test(result.artist);
 
       this.setState({
         isLoading: false,
         results: _.filter(this.searchIndex, isMatch),
       })
     }, 300)
-  }
+  };
 
-  getMatches = (query) => {
+  getLineUpForMatchingArtists = (query) => {
     return this.searchIndex.filter(lineUpDocument => lineUpDocument.artist.startsWith(query))
-  }
+  };
 
   render() {
-    const { isLoading, value, results } = this.state
+    const { isLoading, value, results } = this.state;
+    const searchInputProps = {fluid: true};
 
     return (
       <Fragment>
         <Search
           loading={isLoading}
-          onResultSelect={this.handleResultSelect}
-          onSearchChange={_.debounce(this.handleSearchChange, 500, { leading: true })}
+          onResultSelect={this._handleResultSelect}
+          onSearchChange={_.debounce(this._handleSearchChange, 500, { leading: true })}
           results={results}
           value={value}
+          selectFirstResult={true}
+          input={searchInputProps}
           placeholder="Künstler suchen"
-          resultRenderer={resultRenderer}
-          {...this.props}
+          noResultsMessage="Keine Ergebnisse"
+          resultRenderer={resultPreviewsRenderer}
         />
-        {this.state.value === '' ? '' :
+        {value === '' ? '' :
           <List relaxed verticalAlign='middle' size="large">
-            {this.getMatches(this.state.value).map(lineUpItem => 
-              <List.Item key={lineUpItem.artist}>
-                <List.Content>
-                  <List.Header>{lineUpItem.time} {lineUpItem.url !== null ? <a href={lineUpItem.url}>{lineUpItem.artist}</a> : lineUpItem.artist}</List.Header>
-                  <List.Description>{lineUpItem.stage}</List.Description>
-                </List.Content>
-              </List.Item>)
+            {this.getLineUpForMatchingArtists(value).map(lineUpItem =>
+              <LineUpItem 
+                key={lineUpItem.artist}
+                artist={lineUpItem.artist}
+                starred={this.props.starredArtists.includes(lineUpItem.artist)}
+                url={lineUpItem.url}
+                time={lineUpItem.time}
+                starHandler={this.props.starHandler} 
+                stage={lineUpItem.stage}
+                day={lineUpItem.day} />)
             }
           </List>
         }
@@ -91,5 +113,11 @@ class ArtistSearch extends Component {
     )
   }
 }
+
+ArtistSearch.propTypes = {
+  source: PropTypes.array.isRequired,
+  starHandler: PropTypes.func.isRequired,
+  starredArtists: PropTypes.array.isRequired
+};
 
 export default ArtistSearch;
